@@ -48,8 +48,8 @@ const getSessionId = () => {
   let sessionId = getSessionCookie("ExpSessionId");
   if (!sessionId) {
     sessionId = generateSessionId();
-    document.cookie = `ExpSessionId=${sessionId}; path=/;
-SameSite=Lax; Secure`;
+    document.cookie = \`ExpSessionId=\${sessionId}; path=/;
+SameSite=Lax; Secure\`;
   }
   return sessionId;
 };
