@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
       >
         {`
           (function() {
-            const domainKey = '686fd57b7defbc0dd76499d3';
+            const domainKey = '684a741aca1fc468ea05ecfb';
             const proApiUrl = 'https://proapi.qa.experience.com';
             
 const getSessionCookie = name => {
