@@ -65,7 +65,7 @@ const fetchPixel = async () => {
       cookieConsent: true,
     });
     const response = await fetch(
-     \`\${proApiUrl}/api/pixel/v1/domain/pixel?${params.toString()}\`
+     \`\${proApiUrl}/api/pixel/v1/domain/pixel?\${params.toString()}\`
     );
     if (!response.ok) {
       throw new Error(\`HTTP error! status: \${response.status}\`);
