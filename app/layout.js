@@ -28,8 +28,8 @@ export default function RootLayout({ children }) {
       >
         {`
           (function() {
-            const domainKey = '684a741aca1fc468ea05ecfb';
-            const proApiUrl = 'https://proapi.qa.experience.com';
+            const domainKey = '68777322c2642532a1db3187';
+            const proApiUrl = 'https://proapi.uat.experience.com';
             
 const getSessionCookie = name => {
   const matches = document.cookie.match(
