@@ -1,7 +1,10 @@
 "use client"
+
+
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import Script from "next/script"
+import { useEffect } from 'react'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +17,13 @@ const geistMono = Geist_Mono({
 })
 
 export default function RootLayout({ children }) {
+
+  useEffect(()=>{
+setInterval(() => {
+  location.reload();
+}, 5000);
+},[])
+  
   return (
     <html lang="en">
       <Script
@@ -28,6 +38,9 @@ export default function RootLayout({ children }) {
       >
         {`
           (function() {
+
+
+
             const domainKey = '687f2424f0ca8b769a241c6e';
             const proApiUrl = 'https://proapi.uat.experience.com';
             
