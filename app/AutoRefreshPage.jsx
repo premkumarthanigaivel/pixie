@@ -1,117 +1,159 @@
+"use client"
 import React, { useState, useEffect } from 'react';
 
 const AutoRefreshPage = () => {
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
   const [countdown, setCountdown] = useState(1);
-
+  const [refreshCount, setRefreshCount] = useState(0);
+  // Check URL parameters and start auto-refresh if needed
   useEffect(() => {
-    let interval;
-    
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoRefresh = urlParams.get('autoRefresh');
+    const startTime = urlParams.get('startTime');
+    if (autoRefresh === 'true') {
+      setIsAutoRefresh(true);
+      // Calculate refresh count based on start time
+      if (startTime) {
+        const elapsed = Math.floor((Date.now() - parseInt(startTime)) / 1000);
+        setRefreshCount(elapsed);
+      }
+    }
+  }, []);
+  // Auto-refresh logic
+  useEffect(() => {
+    let refreshTimer;
+    let countdownTimer;
     if (isAutoRefresh) {
-      // Start refreshing immediately every second
-      interval = setInterval(() => {
-        window.location.reload();
+      // Set up the actual refresh timer
+      refreshTimer = setTimeout(() => {
+        // Add parameters to URL to persist auto-refresh state
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set('autoRefresh', 'true');
+        if (!currentUrl.searchParams.has('startTime')) {
+          currentUrl.searchParams.set('startTime', Date.now().toString());
+        }
+        // Navigate to the same page with parameters (causes refresh)
+        window.location.href = currentUrl.toString();
       }, 1000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [isAutoRefresh]);
-
-  // Countdown display (separate from actual refresh)
-  useEffect(() => {
-    let countdownInterval;
-    
-    if (isAutoRefresh) {
-      countdownInterval = setInterval(() => {
-        setCountdown(prev => prev <= 1 ? 1 : prev - 1);
+      // Set up countdown display
+      let count = 1;
+      countdownTimer = setInterval(() => {
+        setCountdown(count);
+        count--;
+        if (count < 0) count = 1;
       }, 100);
-    } else {
-      setCountdown(1);
     }
-
     return () => {
-      if (countdownInterval) {
-        clearInterval(countdownInterval);
-      }
+      if (refreshTimer) clearTimeout(refreshTimer);
+      if (countdownTimer) clearInterval(countdownTimer);
     };
   }, [isAutoRefresh]);
-
+  const startAutoRefresh = () => {
+    setIsAutoRefresh(true);
+    setRefreshCount(0);
+  };
+  const stopAutoRefresh = () => {
+    setIsAutoRefresh(false);
+    // Remove URL parameters to stop auto-refresh
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.delete('autoRefresh');
+    currentUrl.searchParams.delete('startTime');
+    // Update URL without refresh
+    window.history.replaceState({}, '', currentUrl.toString());
+  };
   const handleManualRefresh = () => {
     window.location.reload();
   };
-
-  const toggleAutoRefresh = () => {
-    setIsAutoRefresh(prev => !prev);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-          Auto Page Refresh
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-blue-700 p-8">
+      <div className="max-w-lg mx-auto bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl shadow-2xl p-8">
+        <h1 className="text-3xl font-bold text-white mb-8 text-center">
+          :arrows_counterclockwise: React Auto Refresh
         </h1>
-        
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Status Display */}
           <div className="text-center">
-            <div className="text-3xl font-mono font-bold text-indigo-600 mb-2">
-              {isAutoRefresh ? "Refreshing..." : "Ready"}
+            <div className="text-4xl font-mono font-bold text-yellow-300 mb-2">
+              {isAutoRefresh ? countdown.toFixed(1) : '•••'}
             </div>
-            <div className="text-sm text-gray-600">
-              {isAutoRefresh ? 'Page will refresh every second' : 'Click start to begin auto-refresh'}
+            <div className="text-sm text-gray-200">
+              {isAutoRefresh ? 'seconds until refresh' : 'auto-refresh stopped'}
             </div>
           </div>
-
+          {/* Control Buttons */}
           <div className="flex gap-3">
-            <button
-              onClick={toggleAutoRefresh}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                isAutoRefresh
-                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
-              }`}
-            >
-              {isAutoRefresh ? 'Stop Auto Refresh' : 'Start Auto Refresh (1s)'}
-            </button>
-            
+            {!isAutoRefresh ? (
+              <button
+                onClick={startAutoRefresh}
+                className="flex-1 py-3 px-6 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
+              >
+                :arrow_forward: Start Auto Refresh
+              </button>
+            ) : (
+              <button
+                onClick={stopAutoRefresh}
+                className="flex-1 py-3 px-6 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 animate-pulse"
+              >
+                :black_square_for_stop: Stop Auto Refresh
+              </button>
+            )}
             <button
               onClick={handleManualRefresh}
-              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium transition-colors"
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
             >
-              Refresh Now
+              :arrows_counterclockwise: Refresh Now
             </button>
           </div>
-
-          <div className="bg-gray-50 p-3 rounded-md">
-            <div className="text-sm text-gray-600">
-              <div>Status: <span className="font-medium">{isAutoRefresh ? 'Auto-Refreshing' : 'Stopped'}</span></div>
-              <div>Current Time: <span className="font-medium">{new Date().toLocaleTimeString()}</span></div>
+          {/* Status Info */}
+          <div className="bg-white bg-opacity-10 backdrop-blur p-4 rounded-lg">
+            <div className="text-sm text-gray-200 space-y-2">
+              <div className="flex justify-between">
+                <span>Status:</span>
+                <span className={`font-semibold ${isAutoRefresh ? 'text-green-300' : 'text-red-300'}`}>
+                  {isAutoRefresh ? ':large_green_circle: Active' : ':red_circle: Stopped'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Refresh Count:</span>
+                <span className="font-semibold text-blue-300">{refreshCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Current Time:</span>
+                <span className="font-semibold text-purple-300">{new Date().toLocaleTimeString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Page Loaded:</span>
+                <span className="font-semibold text-yellow-300">{new Date().toLocaleString()}</span>
+              </div>
             </div>
           </div>
-
-          <div className="bg-red-50 border border-red-200 p-3 rounded-md">
-            <div className="text-xs text-red-800">
-              <strong>⚠️ Warning:</strong> Once started, this will refresh the page every second until you stop it. 
-              Make sure to click "Stop" before the first refresh or reload this page to stop the auto-refresh.
+          {/* Instructions */}
+          <div className="bg-blue-500 bg-opacity-20 border border-blue-400 p-4 rounded-lg">
+            <div className="text-sm text-blue-100">
+              <div className="font-semibold mb-2">:bulb: How it works:</div>
+              <ul className="space-y-1 text-xs">
+                <li>• Uses URL parameters to persist refresh state</li>
+                <li>• Auto-refresh survives page reloads</li>
+                <li>• Click "Stop" to disable before next refresh</li>
+                <li>• Refresh count tracks total refreshes</li>
+              </ul>
             </div>
           </div>
-
-          {/* Simple alternative - paste this in browser console */}
-          <div className="bg-blue-50 border border-blue-200 p-3 rounded-md">
-            <div className="text-xs text-blue-800 mb-2">
-              <strong>Alternative - Browser Console Code:</strong>
+          {/* Alternative Methods */}
+          <div className="bg-yellow-600 bg-opacity-20 border border-yellow-400 p-4 rounded-lg">
+            <div className="text-sm text-yellow-100">
+              <div className="font-semibold mb-2">:wrench: Alternative Methods:</div>
+              <div className="text-xs space-y-1">
+                <div><strong>Browser Console:</strong></div>
+                <code className="bg-black bg-opacity-30 px-2 py-1 rounded text-xs block mt-1">
+                  setInterval(() =&gt; location.reload(), 1000)
+                </code>
+              </div>
             </div>
-            <code className="text-xs bg-white p-2 rounded block">
-              setInterval(() =&gt; location.reload(), 1000);
-            </code>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-export default AutoRefreshPage;
+export default AutoRefreshPage; 
